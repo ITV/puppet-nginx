@@ -13,15 +13,17 @@
 # Sample Usage:
 #
 # This class file is not called directly
-class nginx::package::debian (
-    $manage_repo              = true,
-    $package_name             = 'nginx',
-    $package_source           = 'nginx',
-    $package_ensure           = 'present',
-    $passenger_package_ensure = 'present'
-  ) {
+class nginx::package::debian {
 
-  $distro = downcase($::operatingsystem)
+  $package_name             = $nginx::package_name
+  $package_source           = $nginx::package_source
+  $package_ensure           = $nginx::package_ensure
+  $package_flavor           = $nginx::package_flavor
+  $passenger_package_ensure = $nginx::passenger_package_ensure
+  $manage_repo              = $nginx::manage_repo
+  $release                  = $nginx::repo_release
+
+  $distro = downcase($facts['os']['name'])
 
   package { 'nginx':
     ensure => $package_ensure,
@@ -29,7 +31,7 @@ class nginx::package::debian (
   }
 
   if $manage_repo {
-    include '::apt'
+    include 'apt'
     Exec['apt_update'] -> Package['nginx']
 
     case $package_source {
@@ -37,26 +39,24 @@ class nginx::package::debian (
         apt::source { 'nginx':
           location => "https://nginx.org/packages/${distro}",
           repos    => 'nginx',
-          key      => '573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62',
+          key      => {'id' => '573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62'},
+          release  => $release,
         }
       }
       'nginx-mainline': {
         apt::source { 'nginx':
           location => "https://nginx.org/packages/mainline/${distro}",
           repos    => 'nginx',
-          key      => '573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62',
+          key      => {'id' => '573BFD6B3D8FBC641079A6ABABF5BD827BD9BF62'},
+          release  => $release,
         }
       }
       'passenger': {
         apt::source { 'nginx':
           location => 'https://oss-binaries.phusionpassenger.com/apt/passenger',
           repos    => 'main',
-          key      => '16378A33A6EF16762922526E561F9B9CAC40B2F7',
+          key      => {'id' => '16378A33A6EF16762922526E561F9B9CAC40B2F7'},
         }
-
-        ensure_packages([ 'apt-transport-https', 'ca-certificates' ])
-
-        Package['apt-transport-https','ca-certificates'] -> Apt::Source['nginx']
 
         package { 'passenger':
           ensure  => $passenger_package_ensure,

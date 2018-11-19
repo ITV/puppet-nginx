@@ -2,7 +2,9 @@
 <% if defined? @www_root -%>
     root          <%= @www_root %>;
 <% end -%>
+<% if defined? @fastcgi_params -%>
     include       <%= @fastcgi_params %>;
+<% end -%>
 
     fastcgi_pass  <%= @fastcgi %>;
 <% if @fastcgi_index -%>
@@ -12,7 +14,7 @@
     fastcgi_split_path_info <%= @fastcgi_split_path %>;
 <% end -%>
 <% if defined? @fastcgi_script -%>
-    <%-# this setting can be overridden by setting it in the fastcgi_param hash too %>
+    <%# this setting can be overridden by setting it in the fastcgi_param hash too %>
     <%- @fastcgi_param = { 'SCRIPT_FILENAME' => @fastcgi_script }.merge(@fastcgi_param || {}) -%>
 <% end -%>
 <% if defined? @fastcgi_param -%>
